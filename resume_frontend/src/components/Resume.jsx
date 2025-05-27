@@ -1,31 +1,88 @@
-import React, { useRef } from "react";
+import React from "react";
 import { FaGithub, FaLinkedin, FaPhone, FaEnvelope } from "react-icons/fa";
-import html2pdf from "html2pdf.js";
+import { toPng } from "html-to-image";
+import { jsPDF } from "jspdf";
+import { useRef } from "react";
 
 const Resume = ({ data }) => {
   const resumeRef = useRef(null);
 
- const handleDownloadPdf = () => {
-  const element = resumeRef.current;
-  const opt = {
-    margin: 0.5,
-    filename: `${data.personalInformation.fullName || 'resume'}_Resume.pdf`,
-    image: { type: "jpeg", quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true }, // Important for Tailwind and external styles
-    jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+  const handleDownloadPdf = async () => {
+    if (!resumeRef.current) return;
+
+    try {
+      // Capture the element exactly as it appears on screen
+      const dataUrl = await toPng(resumeRef.current, {
+        quality: 1.0,
+        pixelRatio: 2, // Higher resolution for crisp output
+        // Don't override background - capture as-is
+        includeQueryParams: true,
+        style: {
+          transform: 'scale(1)',
+          transformOrigin: 'top left',
+        },
+        // Ensure all fonts and styles are loaded
+        skipFonts: false,
+        cacheBust: true,
+        useCORS: true,
+        allowTaint: false
+      });
+
+      // Create image to get dimensions
+      const img = new Image();
+      img.onload = function() {
+        const imgWidth = this.width;
+        const imgHeight = this.height;
+        
+        // Calculate PDF dimensions to maintain exact aspect ratio
+        const pdfWidth = 210; // A4 width in mm
+        const pdfHeight = (imgHeight * pdfWidth) / imgWidth;
+        
+        // Create PDF with custom dimensions to fit all content
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: [pdfWidth, Math.max(pdfHeight, 297)] // Ensure minimum A4 height
+        });
+
+        // Add image to PDF with full content visible - no background override
+        pdf.addImage(
+          dataUrl, 
+          'PNG', 
+          0, 
+          0, 
+          pdfWidth, 
+          pdfHeight,
+          undefined,
+          'MEDIUM' // Better quality compression
+        );
+        
+        // Save the PDF
+        pdf.save(`${data.personalInformation.fullName}_Resume.pdf`);
+      };
+      
+      img.onerror = function() {
+        console.error("Error loading image for PDF generation");
+        alert("Failed to generate PDF. Please try again.");
+      };
+      
+      img.src = dataUrl;
+      
+    } catch (err) {
+      console.error("Error generating PDF:", err);
+      alert("Failed to generate PDF. Please try again.");
+    }
   };
-
-  setTimeout(() => {
-    html2pdf().set(opt).from(element).save();
-  }, 200); // short delay to ensure rendering
-};
-
 
   return (
     <>
       <div
         ref={resumeRef}
-        className="max-w-4xl mx-auto shadow-2xl rounded-lg p-8 space-y-6 bg-base-100 text-base-content border border-gray-200 dark:border-gray-700"
+        className="max-w-4xl mx-auto shadow-2xl rounded-lg p-8 space-y-6 bg-base-100 text-base-content border border-gray-200 dark:border-gray-700 transition-all duration-300"
+        style={{ 
+          minHeight: 'fit-content',
+          pageBreakInside: 'avoid'
+        }}
       >
         {/* Header Section */}
         <div className="text-center space-y-2">
@@ -82,26 +139,26 @@ const Resume = ({ data }) => {
         {/* Summary Section */}
         <section>
           <h2 className="text-2xl font-semibold text-secondary">Summary</h2>
-          <p className="text-gray-700 dark:text-gray-300">{data.summary}</p>
+          <p className="text-gray-900 dark:text-gray-100 font-medium">{data.summary}</p>
         </section>
 
         <div className="divider"></div>
 
         {/* Skills Section */}
-<section>
-  <h2 className="text-2xl font-semibold text-secondary">Skills</h2>
-  <div className="flex flex-wrap gap-2 mt-2">
-    {data.skills.map((skill, index) => (
-      <div
-        key={index}
-        className="badge badge-outline badge-lg whitespace-normal break-words text-sm"
-      >
-        {skill.title} - <span className="ml-1 font-semibold">{skill.level}</span>
-      </div>
-    ))}
-  </div>
-</section>
-
+        <section>
+          <h2 className="text-2xl font-semibold text-secondary">Skills</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
+            {data.skills.map((skill, index) => (
+              <div
+                key={index}
+                className="badge badge-outline badge-lg px-4 py-2"
+              >
+                {skill.title} -{" "}
+                <span className="ml-1 font-semibold">{skill.level}</span>
+              </div>
+            ))}
+          </div>
+        </section>
 
         <div className="divider"></div>
 
@@ -114,11 +171,11 @@ const Resume = ({ data }) => {
               className="mb-4 p-4 rounded-lg shadow-md bg-base-200 border border-gray-300 dark:border-gray-700"
             >
               <h3 className="text-xl font-bold">{exp.jobTitle}</h3>
-              <p className="text-gray-500">
+              <p className="text-gray-600 dark:text-gray-200">
                 {exp.company} | {exp.location}
               </p>
-              <p className="text-gray-400">{exp.duration}</p>
-              <p className="mt-2 text-gray-600 dark:text-gray-300">
+              <p className="text-gray-500 dark:text-gray-300">{exp.duration}</p>
+              <p className="mt-2 text-gray-800 dark:text-gray-100">
                 {exp.responsibility}
               </p>
             </div>
@@ -136,10 +193,10 @@ const Resume = ({ data }) => {
               className="mb-4 p-4 rounded-lg shadow-md bg-base-200 border border-gray-300 dark:border-gray-700"
             >
               <h3 className="text-xl font-bold">{edu.degree}</h3>
-              <p className="text-gray-500">
+              <p className="text-gray-600 dark:text-gray-200">
                 {edu.university}, {edu.location}
               </p>
-              <p className="text-gray-400">
+              <p className="text-gray-500 dark:text-gray-300">
                 🎓 Graduation Year: {edu.graduationYear}
               </p>
             </div>
@@ -159,7 +216,7 @@ const Resume = ({ data }) => {
               className="mb-4 p-4 rounded-lg shadow-md bg-base-200 border border-gray-300 dark:border-gray-700"
             >
               <h3 className="text-xl font-bold">{cert.title}</h3>
-              <p className="text-gray-500">
+              <p className="text-gray-600 dark:text-gray-200">
                 {cert.issuingOrganization} - {cert.year}
               </p>
             </div>
@@ -177,10 +234,10 @@ const Resume = ({ data }) => {
               className="mb-4 p-4 rounded-lg shadow-md bg-base-200 border border-gray-300 dark:border-gray-700"
             >
               <h3 className="text-xl font-bold">{proj.title}</h3>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p className="text-gray-800 dark:text-gray-100">
                 {proj.description}
               </p>
-              <p className="text-gray-500">
+              <p className="text-gray-600 dark:text-gray-200">
                 🛠 Technologies: {proj.technologiesUsed.join(", ")}
               </p>
               {proj.githubLink && (
@@ -199,10 +256,31 @@ const Resume = ({ data }) => {
 
         <div className="divider"></div>
 
+        {/* Achievements Section */}
+        <section>
+          <h2 className="text-2xl font-semibold text-secondary">
+            Achievements
+          </h2>
+          {data.achievements.map((ach, index) => (
+            <div
+              key={index}
+              className="mb-4 p-4 rounded-lg shadow-md bg-base-200 border border-gray-300 dark:border-gray-700"
+            >
+              <h3 className="text-xl font-bold">{ach.title}</h3>
+              <p className="text-gray-600 dark:text-gray-200">{ach.year}</p>
+              <p className="text-gray-800 dark:text-gray-100">
+                {ach.extraInformation}
+              </p>
+            </div>
+          ))}
+        </section>
+
+        <div className="divider"></div>
+
         {/* Languages Section */}
         <section>
           <h2 className="text-2xl font-semibold text-secondary">Languages</h2>
-          <ul className="list-disc pl-6 text-gray-700 dark:text-gray-300">
+          <ul className="list-disc pl-6 text-gray-800 dark:text-gray-100">
             {data.languages.map((lang, index) => (
               <li key={index}>{lang.name}</li>
             ))}
@@ -214,7 +292,7 @@ const Resume = ({ data }) => {
         {/* Interests Section */}
         <section>
           <h2 className="text-2xl font-semibold text-secondary">Interests</h2>
-          <ul className="list-disc pl-6 text-gray-700 dark:text-gray-300">
+          <ul className="list-disc pl-6 text-gray-800 dark:text-gray-100">
             {data.interests.map((interest, index) => (
               <li key={index}>{interest.name}</li>
             ))}
@@ -223,9 +301,13 @@ const Resume = ({ data }) => {
       </div>
 
       <section className="flex justify-center mt-4">
-        <div onClick={handleDownloadPdf} className="btn btn-primary">
+        <button 
+          onClick={handleDownloadPdf} 
+          className="btn btn-primary"
+          disabled={!data.personalInformation.fullName}
+        >
           Download PDF
-        </div>
+        </button>
       </section>
     </>
   );
