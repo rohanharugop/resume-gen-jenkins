@@ -1,40 +1,88 @@
 package com.resume.backend.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
 public class ResumeServiceImpl implements ResumeService {
 
-    private ChatClient chatClient;
+    @Value("${groq.api.key}")
+    private String groqApiKey;
 
-    public ResumeServiceImpl(ChatClient.Builder builder) {
-        this.chatClient = builder.build();
+    @Value("${groq.api.url:https://api.groq.com/openai/v1/chat/completions}")
+    private String groqApiUrl;
+
+    @Value("${groq.model:llama3-70b-8192}")
+    private String groqModel;
+
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
+
+    public ResumeServiceImpl(RestTemplate restTemplate, ObjectMapper objectMapper) {
+        this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
     }
 
     @Override
-    public   Map<String, Object> generateResumeResponse(String userResumeDescription) throws IOException {
-
+    public Map<String, Object> generateResumeResponse(String userResumeDescription) throws IOException {
         String promptString = this.loadPromptFromFile("resume_prompt.txt");
         String promptContent = this.putValuesToTemplate(promptString, Map.of(
                 "userDescription", userResumeDescription
         ));
-        Prompt prompt = new Prompt(promptContent);
-        String response = chatClient.prompt(prompt).call().content();
+
+        String response = callGroqAPI(promptContent);
         Map<String, Object> stringObjectMap = parseMultipleResponses(response);
-        //modify :
         return stringObjectMap;
     }
 
+    private String callGroqAPI(String prompt) throws IOException {
+        // Create request headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(groqApiKey);
+
+        // Create request body
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("model", groqModel);
+        requestBody.put("messages", List.of(
+                Map.of("role", "user", "content", prompt)
+        ));
+        requestBody.put("max_tokens", 4000);
+        requestBody.put("temperature", 0.7);
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    groqApiUrl,
+                    HttpMethod.POST,
+                    entity,
+                    String.class
+            );
+
+            if (response.getStatusCode() == HttpStatus.OK) {
+                // Parse the response to extract the content
+                JsonNode jsonResponse = objectMapper.readTree(response.getBody());
+                return jsonResponse.path("choices").get(0).path("message").path("content").asText();
+            } else {
+                throw new RuntimeException("Groq API call failed with status: " + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            throw new IOException("Error calling Groq API: " + e.getMessage(), e);
+        }
+    }
 
     String loadPromptFromFile(String filename) throws IOException {
         Path path = new ClassPathResource(filename).getFile().toPath();
@@ -43,13 +91,10 @@ public class ResumeServiceImpl implements ResumeService {
 
     String putValuesToTemplate(String template, Map<String, String> values) {
         for (Map.Entry<String, String> entry : values.entrySet()) {
-
             template = template.replace("{{" + entry.getKey() + "}}", entry.getValue());
-
         }
         return template;
     }
-
 
     public static Map<String, Object> parseMultipleResponses(String response) {
         Map<String, Object> jsonResponse = new HashMap<>();
@@ -85,4 +130,3 @@ public class ResumeServiceImpl implements ResumeService {
         return jsonResponse;
     }
 }
-
