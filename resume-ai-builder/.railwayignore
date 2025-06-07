@@ -1,0 +1,2 @@
+# Create .railwayignore file
+New-Item -Path ".railwayignore" -ItemType File -Value "Dockerfile*"

@@ -3,7 +3,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "java -jar target/resume-ai-builder-0.0.1-SNAPSHOT.jar",
+    "startCommand": "java -Dserver.port=$PORT -jar target/resume-ai-builder-0.0.1-SNAPSHOT.jar",
     "healthcheckPath": "/api/v1/resume/health"
   }
 }
