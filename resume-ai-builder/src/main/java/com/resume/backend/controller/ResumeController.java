@@ -10,7 +10,11 @@ import java.io.IOException;
 import java.util.Map;
 
 @RestController
-@CrossOrigin("*")
+@CrossOrigin(origins = {
+        "http://localhost:5173",
+        "https://ai-resume-maker-frontend.vercel.app",
+        "*"  // Temporarily allow all origins for testing
+})
 @RequestMapping("/api/v1/resume")
 public class ResumeController {
 
@@ -19,6 +23,7 @@ public class ResumeController {
     public ResumeController(ResumeService resumeService) {
         this.resumeService = resumeService;
     }
+
 
 
     @PostMapping("/generate")
@@ -31,5 +36,9 @@ public class ResumeController {
 
     }
 
+    @GetMapping("/health")
+    public ResponseEntity<String> health() {
+        return ResponseEntity.ok("Application is running!");
+    }
 
 }
