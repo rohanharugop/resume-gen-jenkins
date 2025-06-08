@@ -15,7 +15,7 @@
 	<groupId>com.resume.backend</groupId>
 	<artifactId>resume-ai-backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>resume-ai-backend</name>
+	<n>resume-ai-backend</n>
 	<description>This is a backend of resume maker</description>
 
 	<properties>
@@ -28,6 +28,12 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<!-- Spring Boot Actuator for health checks -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 
 		<!-- Spring AI for Ollama (can be removed if no longer using) -->
@@ -85,7 +91,7 @@
 
 	<build>
 		<plugins>
-			<!-- Java Compiler Plugin -->
+			<!-- Java Compiler Plugin - version managed by Spring Boot parent -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
