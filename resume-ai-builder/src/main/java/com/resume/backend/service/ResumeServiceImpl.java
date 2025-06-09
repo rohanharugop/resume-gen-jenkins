@@ -3,14 +3,15 @@ package com.resume.backend.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,18 +30,19 @@ public class ResumeServiceImpl implements ResumeService {
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final ResourceLoader resourceLoader;
 
-    public ResumeServiceImpl(RestTemplate restTemplate, ObjectMapper objectMapper) {
+    public ResumeServiceImpl(RestTemplate restTemplate, ObjectMapper objectMapper, ResourceLoader resourceLoader) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
+        this.resourceLoader = resourceLoader;
     }
 
     @Override
     public Map<String, Object> generateResumeResponse(String userResumeDescription) throws IOException {
         String promptString = this.loadPromptFromFile("resume_prompt.txt");
         String promptContent = this.putValuesToTemplate(promptString, Map.of(
-                "userDescription", userResumeDescription
-        ));
+                "userDescription", userResumeDescription));
 
         String response = callGroqAPI(promptContent);
         Map<String, Object> stringObjectMap = parseMultipleResponses(response);
@@ -57,8 +59,7 @@ public class ResumeServiceImpl implements ResumeService {
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("model", groqModel);
         requestBody.put("messages", List.of(
-                Map.of("role", "user", "content", prompt)
-        ));
+                Map.of("role", "user", "content", prompt)));
         requestBody.put("max_tokens", 4000);
         requestBody.put("temperature", 0.7);
 
@@ -69,8 +70,7 @@ public class ResumeServiceImpl implements ResumeService {
                     groqApiUrl,
                     HttpMethod.POST,
                     entity,
-                    String.class
-            );
+                    String.class);
 
             if (response.getStatusCode() == HttpStatus.OK) {
                 // Parse the response to extract the content
@@ -85,8 +85,10 @@ public class ResumeServiceImpl implements ResumeService {
     }
 
     String loadPromptFromFile(String filename) throws IOException {
-        Path path = new ClassPathResource(filename).getFile().toPath();
-        return Files.readString(path);
+        Resource resource = resourceLoader.getResource("classpath:" + filename);
+        try (InputStream inputStream = resource.getInputStream()) {
+            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+        }
     }
 
     String putValuesToTemplate(String template, Map<String, String> values) {
@@ -111,7 +113,7 @@ public class ResumeServiceImpl implements ResumeService {
 
         // Extract content that is in JSON format
         int jsonStart = response.indexOf("```json") + 7; // Start after ```json
-        int jsonEnd = response.lastIndexOf("```");       // End before ```
+        int jsonEnd = response.lastIndexOf("```"); // End before ```
         if (jsonStart != -1 && jsonEnd != -1 && jsonStart < jsonEnd) {
             String jsonContent = response.substring(jsonStart, jsonEnd).trim();
             try {
