@@ -15,7 +15,7 @@
 	<groupId>com.resume.backend</groupId>
 	<artifactId>resume-ai-backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<n>resume-ai-backend</n>
+	<name>resume-ai-backend</name>
 	<description>This is a backend of resume maker</description>
 
 	<properties>
