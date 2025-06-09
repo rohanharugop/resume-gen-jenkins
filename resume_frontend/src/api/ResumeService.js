@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const baseURLL = "http://localhost:8080";
+export const baseURLL = "https://ai-resume-maker-vocq.onrender.com";
 
 export const axiosInstance = axios.create({
   baseURL: baseURLL,
