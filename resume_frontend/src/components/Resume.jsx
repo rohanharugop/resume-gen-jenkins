@@ -147,14 +147,15 @@ const Resume = ({ data }) => {
         {/* Skills Section */}
         <section>
           <h2 className="text-2xl font-semibold text-secondary">Skills</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
+          <div className="flex flex-wrap gap-3 mt-2">
             {data.skills.map((skill, index) => (
               <div
                 key={index}
-                className="badge badge-outline badge-lg px-4 py-2"
+                className="inline-flex items-center px-3 py-2 rounded-full border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-sm font-medium whitespace-nowrap"
               >
-                {skill.title} -{" "}
-                <span className="ml-1 font-semibold">{skill.level}</span>
+                <span className="text-gray-700 dark:text-gray-300">{skill.title}</span>
+                <span className="mx-2 text-gray-400">-</span>
+                <span className="font-semibold text-gray-900 dark:text-gray-100">{skill.level}</span>
               </div>
             ))}
           </div>
