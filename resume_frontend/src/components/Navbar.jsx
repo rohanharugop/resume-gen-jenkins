@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router";
+
 function Navbar() {
   return (
     <div className="navbar shadow bg-base-100">
@@ -52,9 +53,6 @@ function Navbar() {
             <Link to={"/contact"}>Contact Us</Link>
           </li>
         </ul>
-      </div>
-      <div className="navbar-end">
-        <a className="btn">Login</a>
       </div>
     </div>
   );
