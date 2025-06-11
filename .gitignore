@@ -27,13 +27,11 @@ logs/
 .env.*.local
 
 # Application properties with secrets
-application-local.properties
-application-dev.properties
-application-prod.properties
-src/main/resources/application-*.properties
+# Exclude all application properties files
+resume-ai-builder/src/main/resources/application*.properties
 
-# Keep the main application.properties template
-!src/main/resources/application.properties.template
+# But keep the template file for reference
+!resume-ai-builder/src/main/resources/application.properties.template
 
 # OS
 .DS_Store
