@@ -1,0 +1,44 @@
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Build
+target/
+build/
+out/
+*.jar
+*.war
+
+# Logs
+logs/
+*.log
+
+# Runtime
+*.pid
+*.seed
+*.pid.lock
+
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+
+# Application properties with secrets
+application-local.properties
+application-dev.properties
+application-prod.properties
+src/main/resources/application-*.properties
+
+# Keep the main application.properties template
+!src/main/resources/application.properties.template
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
