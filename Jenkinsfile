@@ -1,11 +1,17 @@
 pipeline {
     agent any
     
+    tools {
+        jdk 'JDK-21' // Configure this in Jenkins Global Tool Configuration
+    }
+    
     environment {
         // Define your environment variables
         DOCKER_IMAGE = "resume-ai-app"
         DOCKER_TAG = "${BUILD_NUMBER}"
         GROQ_API_KEY = credentials('groq-api-key') // Store in Jenkins credentials
+        JAVA_HOME = tool('JDK-21') // Use the configured JDK
+        PATH = "${JAVA_HOME}\\bin;${env.PATH}"
     }
     
     stages {
@@ -35,7 +41,7 @@ pipeline {
                     // Run Spring Boot tests
                     bat '''
                         cd resume-ai-builder
-                        ./mvnw test
+                        mvnw.cmd test
                     '''
                 }
             }
@@ -56,13 +62,11 @@ pipeline {
                 script {
                     // Stop existing container and start new one
                     bat '''
-                        docker stop resume-app || true
-                        docker rm resume-app || true
-                        docker run -d --name resume-app \
-                            -p 8080:8080 \
-                            -e GROQ_API_KEY=${GROQ_API_KEY} \
-                            ${DOCKER_IMAGE}:latest
+                        docker stop resume-app
+                        docker rm resume-app
                     '''
+                    // Use separate command for docker run to handle environment variables properly
+                    bat "docker run -d --name resume-app -p 8080:8080 -e GROQ_API_KEY=%GROQ_API_KEY% ${DOCKER_IMAGE}:latest"
                 }
             }
         }
