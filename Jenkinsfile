@@ -20,7 +20,7 @@ pipeline {
             steps {
                 script {
                     // Build React frontend
-                    sh '''
+                    bat '''
                         cd resume_frontend
                         npm install
                         npm run build
@@ -33,7 +33,7 @@ pipeline {
             steps {
                 script {
                     // Run Spring Boot tests
-                    sh '''
+                    bat '''
                         cd resume-ai-builder
                         ./mvnw test
                     '''
@@ -45,8 +45,8 @@ pipeline {
             steps {
                 script {
                     // Build Docker image using your existing Dockerfile
-                    sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
-                    sh "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
+                    bat "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                    bat "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
                 }
             }
         }
@@ -55,7 +55,7 @@ pipeline {
             steps {
                 script {
                     // Stop existing container and start new one
-                    sh '''
+                    bat '''
                         docker stop resume-app || true
                         docker rm resume-app || true
                         docker run -d --name resume-app \
@@ -71,7 +71,7 @@ pipeline {
     post {
         always {
             // Clean up old Docker images
-            sh "docker image prune -f"
+            bat "docker image prune -f"
         }
         success {
             echo 'Pipeline completed successfully!'
