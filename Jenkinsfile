@@ -36,6 +36,13 @@ pipeline {
                 }
             }
         }
+        stage('Checkstyle') {
+            steps {
+                dir('resume-ai-builder') {
+                    bat 'mvn checkstyle:check'
+                }
+            }
+        }
 
         // 👇 Add this stage
         stage('SonarQube Analysis') {
