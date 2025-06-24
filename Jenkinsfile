@@ -37,6 +37,19 @@ pipeline {
             }
         }
 
+        // 👇 Add this stage
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube-server') { // Name must match Jenkins "SonarQube servers" config
+                    withCredentials([string(credentialsId: 'sonar', variable: 'SONAR_TOKEN')]) {
+                        dir('resume-ai-builder') {
+                            bat "mvnw.cmd sonar:sonar -Dsonar.projectKey=resume-ai -Dsonar.host.url=http://localhost:9000 -Dsonar.login=%SONAR_TOKEN%"
+                        }
+                    }
+                }
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 bat "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
