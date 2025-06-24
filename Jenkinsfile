@@ -41,9 +41,9 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube-server') { // Name must match Jenkins "SonarQube servers" config
-                    withCredentials([string(credentialsId: 'sonar', variable: 'SONAR_TOKEN')]) {
+                    withCredentials([string(credentialsId: 'sonar2', variable: 'SONAR_TOKEN')]) {
                         dir('resume-ai-builder') {
-                            bat "mvnw.cmd sonar:sonar -Dsonar.projectKey=resume-ai -Dsonar.host.url=http://localhost:9000 -Dsonar.login=%SONAR_TOKEN%"
+                            bat "mvnw.cmd sonar:sonar -Dsonar.projectKey=resume-ai -Dsonar.host.url=http://localhost:9000 -Dsonar.token=%SONAR_TOKEN%"
                         }
                     }
                 }
