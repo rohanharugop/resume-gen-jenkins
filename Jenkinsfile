@@ -3,6 +3,7 @@ pipeline {
 
     tools {
         jdk 'jdk21' // Configure this in Jenkins Global Tool Configuration
+        maven 'maven3'
     }
 
     environment {
@@ -38,8 +39,10 @@ pipeline {
         }
         stage('Checkstyle') {
             steps {
-                dir('resume-ai-builder') {
-                    bat 'mvn.cmd checkstyle:check'
+                withEnv(["PATH=${tool('maven3')}/bin:${env.PATH}"]) {
+                    dir('resume-ai-builder') {
+                        bat "mvn checkstyle:check"
+                    }
                 }
             }
         }
