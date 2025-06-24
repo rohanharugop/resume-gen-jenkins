@@ -39,7 +39,7 @@ pipeline {
         stage('Checkstyle') {
             steps {
                 dir('resume-ai-builder') {
-                    bat 'mvn checkstyle:check'
+                    bat 'mvn.cmd checkstyle:check'
                 }
             }
         }
