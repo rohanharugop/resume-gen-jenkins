@@ -9,7 +9,7 @@ pipeline {
         DOCKER_IMAGE = "resume-ai-app"
         DOCKER_TAG = "${BUILD_NUMBER}"
         GROQ_API_KEY = credentials('groq-api-key') // Store in Jenkins credentials
-        JAVA_HOME = tool('JDK-21')
+        JAVA_HOME = tool('jdk21')
         PATH = "${JAVA_HOME}\\bin;${env.PATH}"
     }
 
