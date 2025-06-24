@@ -1,80 +1,62 @@
 pipeline {
     agent any
-    
+
     tools {
         jdk 'JDK-21' // Configure this in Jenkins Global Tool Configuration
     }
-    
+
     environment {
-        // Define your environment variables
         DOCKER_IMAGE = "resume-ai-app"
         DOCKER_TAG = "${BUILD_NUMBER}"
         GROQ_API_KEY = credentials('groq-api-key') // Store in Jenkins credentials
-        JAVA_HOME = tool('JDK-21') // Use the configured JDK
+        JAVA_HOME = tool('JDK-21')
         PATH = "${JAVA_HOME}\\bin;${env.PATH}"
     }
-    
+
     stages {
         stage('Checkout') {
             steps {
-                // Checkout code from repository
                 git branch: 'main', url: 'https://github.com/rohanharugop/AI-Resume-Maker.git'
             }
         }
-        
+
         stage('Build Frontend') {
             steps {
-                script {
-                    // Build React frontend
-                    bat '''
-                        cd resume_frontend
-                        npm install
-                        npm run build
-                    '''
+                dir('resume_frontend') {
+                    bat 'npm install'
+                    bat 'npm run build'
                 }
             }
         }
-        
+
         stage('Test Backend') {
             steps {
-                script {
-                    // Run Spring Boot tests
-                    bat '''
-                        cd resume-ai-builder
-                        mvnw.cmd test
-                    '''
+                dir('resume-ai-builder') {
+                    bat 'mvnw.cmd test'
                 }
             }
         }
-        
+
         stage('Build Docker Image') {
             steps {
-                script {
-                    // Build Docker image using your existing Dockerfile
-                    bat "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
-                    bat "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
-                }
+                bat "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                bat "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
             }
         }
-        
+
         stage('Deploy') {
             steps {
-                script {
-                    // Stop existing container and start new one
-                    bat '''
-                        docker stop resume-app
-                        docker rm resume-app
-                    '''
-                    // Use separate command for docker run to handle environment variables properly
-                    bat "docker run -d --name resume-app -p 8080:8080 -e GROQ_API_KEY=%GROQ_API_KEY% ${DOCKER_IMAGE}:latest"
-                }
+                bat '''
+                    docker stop resume-app || echo Container not running
+                    docker rm resume-app || echo Container not found
+                '''
+                bat "docker run -d --name resume-app -p 8080:8080 -e GROQ_API_KEY=%GROQ_API_KEY% ${DOCKER_IMAGE}:latest"
             }
         }
     }
-    
+
     post {
         always {
-            // Clean up old Docker images
             bat "docker image prune -f"
         }
         success {
