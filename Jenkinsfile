@@ -2,14 +2,14 @@ pipeline {
     agent any
 
     tools {
-        jdk 'jdk21' // Configure this in Jenkins Global Tool Configuration
+        jdk 'jdk21'
         maven 'maven3'
     }
 
     environment {
         DOCKER_IMAGE = "resume-ai-app"
         DOCKER_TAG = "${BUILD_NUMBER}"
-        GROQ_API_KEY = credentials('groq-api-key') // Store in Jenkins credentials
+        GROQ_API_KEY = credentials('groq-api-key')
         JAVA_HOME = tool('jdk21')
         PATH = "${JAVA_HOME}\\bin;${env.PATH}"
     }
@@ -21,11 +21,39 @@ pipeline {
             }
         }
 
+        // 🔹 NEW STAGE: Build Info
+        stage('Build Info') {
+            steps {
+                echo "Build Number: ${BUILD_NUMBER}"
+                echo "Branch: ${env.GIT_BRANCH}"
+                echo "Build Started At: ${new Date()}"
+            }
+        }
+
+        // 🔹 NEW STAGE: Verify Tools
+        stage('Verify Tools') {
+            steps {
+                bat 'java -version'
+                bat 'mvn -v'
+                bat 'node -v'
+                bat 'npm -v'
+            }
+        }
+
         stage('Build Frontend') {
             steps {
                 dir('resume_frontend') {
                     bat 'npm install'
                     bat 'npm run build'
+                }
+            }
+        }
+
+        // 🔹 NEW STAGE: Lint Frontend Code (if ESLint is set up)
+        stage('Lint Frontend') {
+            steps {
+                dir('resume_frontend') {
+                    bat 'npx eslint . || echo "Lint warnings found."'
                 }
             }
         }
@@ -40,12 +68,21 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube-server') { // Name must match Jenkins "SonarQube servers" config
+                withSonarQubeEnv('SonarQube-server') {
                     withCredentials([string(credentialsId: 'sonar2', variable: 'SONAR_TOKEN')]) {
                         dir('resume-ai-builder') {
                             bat "mvnw.cmd sonar:sonar -Dsonar.projectKey=resume-ai -Dsonar.host.url=http://localhost:9000 -Dsonar.token=%SONAR_TOKEN%"
                         }
                     }
+                }
+            }
+        }
+
+        // 🔹 NEW STAGE: Archive Frontend Build Zip
+        stage('Archive Frontend') {
+            steps {
+                dir('resume_frontend/dist') {
+                    bat 'powershell Compress-Archive -Path * -DestinationPath ../resume-frontend.zip'
                 }
             }
         }
