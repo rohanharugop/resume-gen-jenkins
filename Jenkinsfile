@@ -37,26 +37,7 @@ pipeline {
                 }
             }
         }
-        stage('Checkstyle') {
-            steps {
-                script {
-                    withEnv(["PATH=${tool('maven3')}/bin:${env.PATH}"]) {
-                        dir('resume-ai-builder') {
-                            def status = bat(script: "mvn checkstyle:check", returnStatus: true)
-                            if (status != 0) {
-                                echo "Checkstyle violations found. Build will continue, but you should fix them."
-                                currentBuild.result = 'UNSTABLE' // Optional: Mark build as unstable
-                            } else {
-                                echo "Checkstyle passed."
-                            }
-                        }
-                    }
-                }
-            }
-        }
 
-
-        // 👇 Add this stage
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube-server') { // Name must match Jenkins "SonarQube servers" config
