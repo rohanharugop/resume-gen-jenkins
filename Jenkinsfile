@@ -21,7 +21,7 @@ pipeline {
             }
         }
 
-        // 🔹 NEW STAGE: Build Info
+        // 🔹 Build Info
         stage('Build Info') {
             steps {
                 echo "Build Number: ${BUILD_NUMBER}"
@@ -30,7 +30,7 @@ pipeline {
             }
         }
 
-        // 🔹 NEW STAGE: Verify Tools
+        // 🔹 Verify Tools
         stage('Verify Tools') {
             steps {
                 bat 'java -version'
@@ -45,15 +45,6 @@ pipeline {
                 dir('resume_frontend') {
                     bat 'npm install'
                     bat 'npm run build'
-                }
-            }
-        }
-
-        // 🔹 NEW STAGE: Lint Frontend Code (if ESLint is set up)
-        stage('Lint Frontend') {
-            steps {
-                dir('resume_frontend') {
-                    bat 'npx eslint . || echo "Lint warnings found."'
                 }
             }
         }
@@ -78,7 +69,7 @@ pipeline {
             }
         }
 
-        // 🔹 NEW STAGE: Archive Frontend Build Zip
+        // 🔹 Archive Frontend Build Zip
         stage('Archive Frontend') {
             steps {
                 dir('resume_frontend/dist') {
