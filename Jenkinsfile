@@ -21,12 +21,26 @@ pipeline {
             }
         }
 
+        // 🟢 Easy Stage 1: Print Hello
+        stage('Hello World') {
+            steps {
+                echo '👋 Hello, Jenkins!'
+            }
+        }
+
         // 🔹 Build Info
         stage('Build Info') {
             steps {
                 echo "Build Number: ${BUILD_NUMBER}"
                 echo "Branch: ${env.GIT_BRANCH}"
                 echo "Build Started At: ${new Date()}"
+            }
+        }
+
+        // 🟢 Easy Stage 2: List Files
+        stage('List Files') {
+            steps {
+                bat 'dir'
             }
         }
 
@@ -37,6 +51,14 @@ pipeline {
                 bat 'mvn -v'
                 bat 'node -v'
                 bat 'npm -v'
+            }
+        }
+
+        // 🟢 Easy Stage 3: Sleep Test
+        stage('Sleep for 3 seconds') {
+            steps {
+                bat 'ping -n 4 127.0.0.1 > nul'
+                echo 'Slept for 3 seconds'
             }
         }
 
