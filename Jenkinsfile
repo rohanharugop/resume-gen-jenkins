@@ -71,12 +71,13 @@ pipeline {
 
         // 🔹 Archive Frontend Build Zip
         stage('Archive Frontend') {
-            steps {
-                dir('resume_frontend/dist') {
-                    bat 'powershell Compress-Archive -Path * -DestinationPath ../resume-frontend.zip'
+                steps {
+                    dir('resume_frontend/dist') {
+                        bat 'powershell Compress-Archive -Path * -DestinationPath ../resume-frontend.zip -Force'
+                    }
                 }
             }
-        }
+
 
         stage('Build Docker Image') {
             steps {
