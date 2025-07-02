@@ -92,7 +92,7 @@ pipeline {
                     docker stop resume-app || echo Container not running
                     docker rm resume-app || echo Container not found
                 '''
-                bat "docker run -d --name resume-app -p 9090:8080 -e GROQ_API_KEY=%GROQ_API_KEY% ${DOCKER_IMAGE}:latest"
+                bat "docker run -d --name resume-app -p 9091:8080 -e GROQ_API_KEY=%GROQ_API_KEY% ${DOCKER_IMAGE}:latest"
             }
         }
     }
