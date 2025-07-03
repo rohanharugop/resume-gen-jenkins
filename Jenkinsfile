@@ -21,7 +21,6 @@ pipeline {
             }
         }
 
-        // 🔹 Build Info
         stage('Build Info') {
             steps {
                 echo "Build Number: ${BUILD_NUMBER}"
@@ -30,7 +29,6 @@ pipeline {
             }
         }
 
-        // 🔹 Verify Tools
         stage('Verify Tools') {
             steps {
                 bat 'java -version'
@@ -57,6 +55,23 @@ pipeline {
             }
         }
 
+        stage('OWASP Dependency Check') {
+            steps {
+                dir('resume-ai-builder') {
+                    bat '''
+                        C:\\dependency-check\\dependency-check\\bin\\dependency-check.bat ^
+                        --project "AI Resume Builder" ^
+                        --scan . ^
+                        --format "HTML" ^
+                        --out owasp-report ^
+                        --enableExperimental
+                    '''
+                }
+                // Archive the report
+                archiveArtifacts artifacts: 'resume-ai-builder/owasp-report/dependency-check-report.html', fingerprint: true
+            }
+        }
+
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube-server') {
@@ -69,15 +84,13 @@ pipeline {
             }
         }
 
-        // 🔹 Archive Frontend Build Zip
         stage('Archive Frontend') {
-                steps {
-                    dir('resume_frontend/dist') {
-                        bat 'powershell Compress-Archive -Path * -DestinationPath ../resume-frontend.zip -Force'
-                    }
+            steps {
+                dir('resume_frontend/dist') {
+                    bat 'powershell Compress-Archive -Path * -DestinationPath ../resume-frontend.zip -Force'
                 }
             }
-
+        }
 
         stage('Build Docker Image') {
             steps {
