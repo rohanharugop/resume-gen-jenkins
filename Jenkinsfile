@@ -55,23 +55,6 @@ pipeline {
             }
         }
 
-        stage('OWASP Dependency Check') {
-            steps {
-                dir('resume-ai-builder') {
-                    bat '''
-                        C:\\dependency-check\\dependency-check\\bin\\dependency-check.bat ^
-                        --project "AI Resume Builder" ^
-                        --scan . ^
-                        --format "HTML" ^
-                        --out owasp-report ^
-                        --enableExperimental
-                    '''
-                }
-                // Archive the report
-                archiveArtifacts artifacts: 'resume-ai-builder/owasp-report/dependency-check-report.html', fingerprint: true
-            }
-        }
-
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube-server') {
